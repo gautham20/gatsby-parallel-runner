@@ -26,6 +26,7 @@ class GoogleFunctions {
     this.pubSubClient = new PubSub({ projectId: config.project_id })
     this.storageClient = new Storage({ projectId: config.project_id })
     this.subscriptionDeadline = parseInt(process.env.DEADLINE_SECONDS, 10) || 200 
+    this.throttleMs = parseInt(process.env.THROTTLE_MS, 10) || 500 
     this.subscribers = []
 
     return (async () => {
@@ -63,6 +64,7 @@ class GoogleFunctions {
   async publish(id, msg) {
     if (msg.byteLength < this.maxPubSubSize) {
       log.info(`Publishing ${id} to pubsub ${this.workerTopic}`)
+      await new Promise(r => setTimeout(r, this.throttleMs));
       await this.pubSubClient.topic(this.workerTopic).publish(msg)
     } else {
       log.debug(`Publishing ${id} to storage ${this.workerBucket}`)

@@ -1,6 +1,6 @@
 {
   "name": "gatsby-parallel-runner",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Gatsby plugin that allows paralellization of external tasks",
   "keywords": [
     "gatsby"
