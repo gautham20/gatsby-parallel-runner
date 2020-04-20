@@ -18,13 +18,14 @@ class GoogleFunctions {
     const config =
       googleConfig ||
       JSON.parse(fs.readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS))
-    this.subName = `gatsby-sub-${Date.now()}`
+    this.subName = `gatsby-sub-${Date.now()}-pull`
     this.workerBucket = bucketFor(processorSettings)
     this.workerTopic = topicFor(processorSettings)
     this.resultBucketName = `event-results-${process.env.TOPIC}`
     this.resultTopic = process.env.TOPIC
     this.pubSubClient = new PubSub({ projectId: config.project_id })
     this.storageClient = new Storage({ projectId: config.project_id })
+    this.subscriptionDeadline = parseInt(process.env.DEADLINE_SECONDS, 10) || 200 
     this.subscribers = []
 
     return (async () => {
@@ -98,8 +99,8 @@ class GoogleFunctions {
     // Creates a new subscription
     const [subscription] = await this.pubSubClient
       .topic(this.resultTopic)
-      .createSubscription(this.subName, { ackDeadlineSeconds: 90 })
-
+      .createSubscription(this.subName, { ackDeadlineSeconds: this.subscriptionDeadline })
+    log.debug('subscription created ---> ', this.subName)
     subscription.on(`message`, this._messageHandler.bind(this))
     subscription.on(`error`, err => log.error(`Error from subscription: `, err))
     subscription.on(`close`, err =>
