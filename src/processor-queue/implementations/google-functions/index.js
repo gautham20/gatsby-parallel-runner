@@ -98,7 +98,7 @@ class GoogleFunctions {
     // Creates a new subscription
     const [subscription] = await this.pubSubClient
       .topic(this.resultTopic)
-      .createSubscription(this.subName)
+      .createSubscription(this.subName, { ackDeadlineSeconds: 90 })
 
     subscription.on(`message`, this._messageHandler.bind(this))
     subscription.on(`error`, err => log.error(`Error from subscription: `, err))
