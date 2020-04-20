@@ -1,3 +1,5 @@
+### Adding ackDeadlineSeconds to createSubscription
+
 # Gatsby Parallel Runner
 
 This is an early a parallel runner for gatsby that allows plugins and core parts of Gatsby to parallelize
