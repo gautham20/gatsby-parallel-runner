@@ -114,11 +114,11 @@ class Queue {
       //   log.info(`throttled sleep for ${waitTime / 1000} seconds`)
       // }
       this._jobs.set(id, { resolve, reject })
-      setTimeout(() => {
-        if (this._jobs.has(id)) {
-          reject(`Job timed out ${id}`)
-        }
-      }, this.maxJobTime)
+      // setTimeout(() => {
+      //   if (this._jobs.has(id)) {
+      //     reject(`Job timed out ${id}`)
+      //   }
+      // }, this.maxJobTime)
       try {
         await this.pubSubImplementation.publish(id, msg)
       } catch (err) {
