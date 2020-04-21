@@ -1,7 +1,21 @@
 "use strict"
 const { Queue, Job } = require(`./queue`)
+const log = require(`loglevel`)
 
-const DEFAULT_MAX_MESSAGE_MEM = 1024 * 1024 * 5 * 10 // 500 megabytes
+const DEFAULT_MAX_MESSAGE_MEM = 1024 * 1024 * 10 * 10 // 1000 megabytes
+
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const until = async (fn) => {
+  waitTime = 0
+  while (!fn()) {
+      waitTime += 2000
+      await sleep(2000)
+  }
+  return waitTime
+}
 
 class ProcessorQueue {
   constructor({ maxJobTime, maxMessageMem, pubSubImplementation }) {
@@ -16,7 +30,11 @@ class ProcessorQueue {
     try {
       const job = await new Job(payload)
       size = job.fileSize
-      await this._waitForFreeMessageMem()
+      //await this._waitForFreeMessageMem()
+      const waitTime = await until(() => this._mem <= this.maxMessageMem)
+      if(waitTime > 0){
+        log.info(`max mem throttling ${waitTime / 1000} seconds`)
+      }
       this._mem += size
       const msg = await job.msg()
       const result = await this.queue.push(job.id, msg)
