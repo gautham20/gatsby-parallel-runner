@@ -2,7 +2,7 @@
 const { Queue, Job } = require(`./queue`)
 const log = require(`loglevel`)
 
-const DEFAULT_MAX_MESSAGE_MEM = 1024 * 1024 * 10 * 10 // 1000 megabytes
+const DEFAULT_MAX_MESSAGE_MEM = process.env.MAX_MESSAGE_MEM_MB? (parseInt(process.env.MAX_MESSAGE_MEM_MB, 10) * 1024 * 1024) : 1024 * 1024 * 10 * 10 // 1000 megabytes
 
 const sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
