@@ -15,6 +15,7 @@ class GoogleFunctions {
     noSubscription,
     googleConfig,
   }) {
+    const maxWaitTime = 30
     this.maxPubSubSize = maxPubSubSize || DEFAULT_MAX_PUB_SUB_SIZE
     const config =
       googleConfig ||
@@ -28,6 +29,12 @@ class GoogleFunctions {
     this.storageClient = new Storage({ projectId: config.project_id })
     this.subscriptionDeadline = parseInt(process.env.DEADLINE_SECONDS, 10) || 200 
     this.subscribers = []
+    this.batchPublisher = this.pubSubClient.topic(this.workerTopic, {
+      batching: {
+        maxMessages: 50,
+        maxMilliseconds: maxWaitTime * 1000,
+      },
+    });
 
     return (async () => {
       const topicCreatedFile = path.join(
@@ -64,7 +71,7 @@ class GoogleFunctions {
   async publish(id, msg) {
     if (msg.byteLength < this.maxPubSubSize) {
       log.debug(`Publishing ${id} to pubsub ${this.workerTopic}`)
-      await this.pubSubClient.topic(this.workerTopic).publish(msg)
+      await this.batchPublisher.publish(msg)
     } else {
       log.debug(`Publishing ${id} to storage ${this.workerBucket}`)
       await this.storageClient
