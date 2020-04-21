@@ -10,6 +10,20 @@ const MESSAGE_TYPES = {
   JOB_FAILED: `JOB_FAILED`,
 }
 
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const until = async (fn) => {
+  waitTime = 0
+  while (!fn()) {
+      waitTime += 2000
+      await sleep(2000)
+  }
+  return waitTime
+}
+
+
 class Job {
   constructor({ id, args, file }) {
     this.id = id
@@ -65,36 +79,38 @@ class Queue {
     this.jobCount = 0
     this.completeJobCount = 0
     this.maxJobTime = maxJobTime || DEFAULT_MAX_JOB_TIME
-    this.maxJobQueued = 400
-    this.queueWaitTime = 0
+    this.maxJobQueued = 600
+    //this.queueWaitTime = 0
     this.pubSubImplementation = pubSubImplementation
     if (pubSubImplementation) {
       pubSubImplementation.subscribe(this._onMessage.bind(this))
     }
   }
 
-  async _waitForQueueMessages() {
-    return new Promise((resolve, reject) => {
-      const check = () => {
-        if (this._jobs.size <= this.maxJobQueued) {
-          if(this.queueWaitTime > 0){
-            log.info(`throttling wait for ${this.queueWaitTime / 1000} seconds`)
-            this.queueWaitTime = 0
-          }
-          return resolve()
-        }
-        this.queueWaitTime += 1000
-        log.info(this.queueWaitTime)
-        return setTimeout(check, 1000)
-      }
-      check()
-    })
-  }
+  // async _waitForQueueMessages() {
+  //   return new Promise((resolve, reject) => {
+  //     const check = () => {
+  //       if (this._jobs.size <= this.maxJobQueued) {
+  //         if(this.queueWaitTime > 0){
+  //           log.info(`throttling wait for ${this.queueWaitTime / 1000} seconds`)
+  //           this.queueWaitTime = 0
+  //         }
+  //         return resolve()
+  //       }
+  //       this.queueWaitTime += 1000
+  //       log.info(this.queueWaitTime)
+  //       return setTimeout(check, 1000)
+  //     }
+  //     check()
+  //   })
+  // }
 
   async push(id, msg) {
     return new Promise(async (resolve, reject) => {
       this.jobCount += 1
-      await this._waitForQueueMessages()
+      //await this._waitForQueueMessages()
+      const waitTime = await until(() => this._jobs.size <= this.maxJobQueued)
+      log.info(`throttled sleep for ${waitTime / 1000} seconds`)
       this._jobs.set(id, { resolve, reject })
       setTimeout(() => {
         if (this._jobs.has(id)) {
