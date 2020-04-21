@@ -90,12 +90,14 @@ class Queue {
 
     switch (type) {
       case MESSAGE_TYPES.JOB_COMPLETED:
+        log.info(`current pending jobs - {this._jobs.size}`)
         if (this._jobs.has(payload.id)) {
           this._jobs.get(payload.id).resolve(payload)
           this._jobs.delete(payload.id)
         }
         return
       case MESSAGE_TYPES.JOB_FAILED:
+        log.info('JOB FAILED')
         if (this._jobs.has(payload.id)) {
           this._jobs.get(payload.id).reject(payload.error)
           this._jobs.delete(payload.id)

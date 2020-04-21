@@ -63,7 +63,7 @@ class GoogleFunctions {
 
   async publish(id, msg) {
     if (msg.byteLength < this.maxPubSubSize) {
-      log.info(`Publishing ${id} to pubsub ${this.workerTopic}`)
+      log.debug(`Publishing ${id} to pubsub ${this.workerTopic}`)
       await this.pubSubClient.topic(this.workerTopic).publish(msg)
     } else {
       log.debug(`Publishing ${id} to storage ${this.workerBucket}`)
@@ -101,7 +101,7 @@ class GoogleFunctions {
     const [subscription] = await this.pubSubClient
       .topic(this.resultTopic)
       .createSubscription(this.subName, { ackDeadlineSeconds: this.subscriptionDeadline })
-    log.debug('subscription created ---> ', this.subName)
+    log.info('subscription created ---> ', this.subName)
     subscription.on(`message`, this._messageHandler.bind(this))
     subscription.on(`error`, err => log.error(`Error from subscription: `, err))
     subscription.on(`close`, err =>
