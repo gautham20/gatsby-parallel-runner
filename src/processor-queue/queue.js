@@ -60,6 +60,7 @@ class Job {
 
 class Queue {
   constructor({ maxJobTime, pubSubImplementation }) {
+    log.info('<<<<< QUEUE INITIATED >>>>>>')
     this._jobs = new Map()
     this.jobCount = 0
     this.completeJobCount = 0
@@ -91,6 +92,8 @@ class Queue {
 
   async push(id, msg) {
     return new Promise(async (resolve, reject) => {
+      this.jobCount += 1
+      await this._waitForQueueMessages()
       this._jobs.set(id, { resolve, reject })
       setTimeout(() => {
         if (this._jobs.has(id)) {
@@ -98,8 +101,6 @@ class Queue {
         }
       }, this.maxJobTime)
       try {
-        await this._waitForQueueMessages()
-        this.jobCount += 1
         await this.pubSubImplementation.publish(id, msg)
       } catch (err) {
         reject(err)
@@ -113,12 +114,12 @@ class Queue {
 
     switch (type) {
       case MESSAGE_TYPES.JOB_COMPLETED:
-        this.completeJobCount += 1
-        log.info(`queued jobs - ${this._jobs.size} completed jobs - ${this.completeJobCount} total jobs - ${this.jobCount}`)
         if (this._jobs.has(payload.id)) {
           this._jobs.get(payload.id).resolve(payload)
+          this.completeJobCount += 1
           this._jobs.delete(payload.id)
         }
+        log.info(`queued jobs - ${this._jobs.size} completed jobs - ${this.completeJobCount} total jobs - ${this.jobCount}`)
         return
       case MESSAGE_TYPES.JOB_FAILED:
         log.info('JOB FAILED')
