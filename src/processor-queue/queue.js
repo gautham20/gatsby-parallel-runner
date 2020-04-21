@@ -109,10 +109,10 @@ class Queue {
     return new Promise(async (resolve, reject) => {
       this.jobCount += 1
       //await this._waitForQueueMessages()
-      const waitTime = await until(() => this._jobs.size <= this.maxJobQueued)
-      if(waitTime > 0){
-        log.info(`throttled sleep for ${waitTime / 1000} seconds`)
-      }
+      // const waitTime = await until(() => this._jobs.size <= this.maxJobQueued)
+      // if(waitTime > 0){
+      //   log.info(`throttled sleep for ${waitTime / 1000} seconds`)
+      // }
       this._jobs.set(id, { resolve, reject })
       setTimeout(() => {
         if (this._jobs.has(id)) {

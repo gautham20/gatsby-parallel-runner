@@ -28,6 +28,7 @@ class GoogleFunctions {
     this.pubSubClient = new PubSub({ projectId: config.project_id, grpc: grpc })
     this.storageClient = new Storage({ projectId: config.project_id })
     this.subscriptionDeadline = parseInt(process.env.DEADLINE_SECONDS, 10) || 200 
+    this.maxInProgress = 50
     this.subscribers = []
     this.batchPublisher = this.pubSubClient.topic(this.workerTopic, {
       batching: {
@@ -107,7 +108,7 @@ class GoogleFunctions {
     // Creates a new subscription
     const [subscription] = await this.pubSubClient
       .topic(this.resultTopic)
-      .createSubscription(this.subName, { ackDeadlineSeconds: this.subscriptionDeadline })
+      .createSubscription(this.subName, { ackDeadlineSeconds: this.subscriptionDeadline, flowControl: {maxMessages: this.maxInProgress} })
     log.info('subscription created ---> ', this.subName)
     subscription.on(`message`, this._messageHandler.bind(this))
     subscription.on(`error`, err => log.error(`Error from subscription: `, err))
