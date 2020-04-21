@@ -65,6 +65,7 @@ class Queue {
     this.completeJobCount = 0
     this.maxJobTime = maxJobTime || DEFAULT_MAX_JOB_TIME
     this.maxJobQueued = 400
+    this.queueWaitTime = 0
     this.pubSubImplementation = pubSubImplementation
     if (pubSubImplementation) {
       pubSubImplementation.subscribe(this._onMessage.bind(this))
@@ -73,15 +74,15 @@ class Queue {
 
   async _waitForQueueMessages() {
     return new Promise((resolve, reject) => {
-      waitTime = 0
       const check = () => {
         if (this._jobs.size <= this.maxJobQueued) {
-          if(waitTime > 0){
-            log.info(`throttling wait for ${waitTime / 1000} seconds`)
+          if(this.queueWaitTime > 0){
+            log.info(`throttling wait for ${this.queueWaitTime / 1000} seconds`)
+            this.queueWaitTime = 0
           }
           return resolve()
         }
-        waitTime += 200
+        this.queueWaitTime += 200
         return setTimeout(check, 200)
       }
       check()
