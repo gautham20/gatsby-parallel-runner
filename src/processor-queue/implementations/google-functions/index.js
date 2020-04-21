@@ -1,4 +1,5 @@
 const { PubSub } = require(`@google-cloud/pubsub`)
+const grpc = require('grpc');
 const { Storage } = require(`@google-cloud/storage`)
 const fs = require(`fs-extra`)
 const path = require(`path`)
@@ -23,10 +24,9 @@ class GoogleFunctions {
     this.workerTopic = topicFor(processorSettings)
     this.resultBucketName = `event-results-${process.env.TOPIC}`
     this.resultTopic = process.env.TOPIC
-    this.pubSubClient = new PubSub({ projectId: config.project_id })
+    this.pubSubClient = new PubSub({ projectId: config.project_id, grpc: grpc })
     this.storageClient = new Storage({ projectId: config.project_id })
     this.subscriptionDeadline = parseInt(process.env.DEADLINE_SECONDS, 10) || 200 
-    this.throttleMs = parseInt(process.env.THROTTLE_MS, 10) || 500 
     this.subscribers = []
 
     return (async () => {
@@ -64,7 +64,6 @@ class GoogleFunctions {
   async publish(id, msg) {
     if (msg.byteLength < this.maxPubSubSize) {
       log.info(`Publishing ${id} to pubsub ${this.workerTopic}`)
-      await new Promise(r => setTimeout(r, this.throttleMs));
       await this.pubSubClient.topic(this.workerTopic).publish(msg)
     } else {
       log.debug(`Publishing ${id} to storage ${this.workerBucket}`)
