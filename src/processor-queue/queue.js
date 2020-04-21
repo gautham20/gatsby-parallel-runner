@@ -61,11 +61,31 @@ class Job {
 class Queue {
   constructor({ maxJobTime, pubSubImplementation }) {
     this._jobs = new Map()
+    this.jobCount = 0
+    this.completeJobCount = 0
     this.maxJobTime = maxJobTime || DEFAULT_MAX_JOB_TIME
+    this.maxJobQueued = 400
     this.pubSubImplementation = pubSubImplementation
     if (pubSubImplementation) {
       pubSubImplementation.subscribe(this._onMessage.bind(this))
     }
+  }
+
+  async _waitForQueueMessages() {
+    return new Promise((resolve, reject) => {
+      waitTime = 0
+      const check = () => {
+        if (this._jobs.size <= this.maxJobQueued) {
+          if(waitTime > 0){
+            log.info(`throttling wait for ${waitTime / 1000} seconds`)
+          }
+          return resolve()
+        }
+        waitTime += 200
+        return setTimeout(check, 200)
+      }
+      check()
+    })
   }
 
   async push(id, msg) {
@@ -77,6 +97,8 @@ class Queue {
         }
       }, this.maxJobTime)
       try {
+        await this._waitForQueueMessages()
+        this.jobCount += 1
         await this.pubSubImplementation.publish(id, msg)
       } catch (err) {
         reject(err)
@@ -90,7 +112,8 @@ class Queue {
 
     switch (type) {
       case MESSAGE_TYPES.JOB_COMPLETED:
-        log.info(`current pending jobs - ${this._jobs.size}`)
+        this.completeJobCount += 1
+        log.info(`queued jobs - ${this._jobs.size} completed jobs - ${this.completeJobCount} total jobs - ${this.jobCount}`)
         if (this._jobs.has(payload.id)) {
           this._jobs.get(payload.id).resolve(payload)
           this._jobs.delete(payload.id)
