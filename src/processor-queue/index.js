@@ -9,7 +9,7 @@ const sleep = (ms) => {
 }
 
 const until = async (fn) => {
-  waitTime = 0
+  let waitTime = 0
   while (!fn()) {
       waitTime += 2000
       await sleep(2000)
