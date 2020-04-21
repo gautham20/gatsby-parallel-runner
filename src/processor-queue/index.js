@@ -1,7 +1,7 @@
 "use strict"
 const { Queue, Job } = require(`./queue`)
 
-const DEFAULT_MAX_MESSAGE_MEM = 1024 * 1024 * 2 * 10 // 200 megabytes
+const DEFAULT_MAX_MESSAGE_MEM = 1024 * 1024 * 5 * 10 // 500 megabytes
 
 class ProcessorQueue {
   constructor({ maxJobTime, maxMessageMem, pubSubImplementation }) {

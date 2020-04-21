@@ -79,7 +79,7 @@ class Queue {
     this.jobCount = 0
     this.completeJobCount = 0
     this.maxJobTime = maxJobTime || DEFAULT_MAX_JOB_TIME
-    this.maxJobQueued = 600
+    this.maxJobQueued = 1000
     //this.queueWaitTime = 0
     this.pubSubImplementation = pubSubImplementation
     if (pubSubImplementation) {
