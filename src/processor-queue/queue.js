@@ -83,8 +83,9 @@ class Queue {
           }
           return resolve()
         }
-        this.queueWaitTime += 200
-        return setTimeout(check, 200)
+        this.queueWaitTime += 1000
+        log.info(this.queueWaitTime)
+        return setTimeout(check, 1000)
       }
       check()
     })
