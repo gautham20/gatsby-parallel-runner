@@ -39,8 +39,9 @@ function messageHandler(gatsbyProcess, processors = {}) {
           return
         }
         try {
-          //log.info(JSON.stringify(msg.payload))
+          log.info("INCOMING MESSAGE", JSON.stringify(msg.payload))
           const result = await processor.process(msg.payload)
+          log.info("RESULT", JSON.stringify(result))
           gatsbyProcess.send({
             type: `JOB_COMPLETED`,
             payload: {
