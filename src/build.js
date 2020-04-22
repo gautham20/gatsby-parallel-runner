@@ -42,8 +42,7 @@ function messageHandler(gatsbyProcess, processors = {}) {
         try {
           log.info("INCOMING MESSAGE", JSON.stringify(msg.payload))
           const outputDir = msg.payload.outputDir
-          let toProcess = false
-          let constructedResult = null
+          let toProcess = true
           if(fs.existsSync(outputDir)){
             const existingFiles = msg.payload.args.operations.filter((op) => {
               return fs.existsSync(path.join(outputDir, op.outputPath))
@@ -68,7 +67,7 @@ function messageHandler(gatsbyProcess, processors = {}) {
               type: `JOB_COMPLETED`,
               payload: {
                 id: msg.payload.id,
-                result: msg.payload.args.operations,
+                result: {"output": msg.payload.args.operations},
               },
             })
           }
