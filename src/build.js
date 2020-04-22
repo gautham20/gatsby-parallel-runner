@@ -3,6 +3,7 @@
 const cp = require(`child_process`)
 const log = require(`loglevel`)
 const path = require(`path`)
+const fs = require(`fs-extra`)
 const { ProcessorQueue } = require(`./processor-queue`)
 const {
   GoogleFunctions,
@@ -40,15 +41,37 @@ function messageHandler(gatsbyProcess, processors = {}) {
         }
         try {
           log.info("INCOMING MESSAGE", JSON.stringify(msg.payload))
-          const result = await processor.process(msg.payload)
-          log.info("RESULT", JSON.stringify(result))
-          gatsbyProcess.send({
-            type: `JOB_COMPLETED`,
-            payload: {
-              id: msg.payload.id,
-              result,
-            },
-          })
+          const outputDir = msg.payload.outputDir
+          let toProcess = false
+          let constructedResult = null
+          if(fs.existsSync(outputDir)){
+            const existingFiles = msg.payload.args.operations.filter((op) => {
+              return fs.existsSync(path.join(outputDir, op.outputPath))
+            })
+            if(existingFiles.length == msg.payload.args.operations.length){
+              toProcess = false
+            }
+          }
+          if(toProcess){
+            const result = await processor.process(msg.payload)
+            log.info("RESULT", JSON.stringify(result))
+            gatsbyProcess.send({
+              type: `JOB_COMPLETED`,
+              payload: {
+                id: msg.payload.id,
+                result,
+              },
+            })
+          } else {
+            log.info("RESULT CONSTRUCTED")
+            gatsbyProcess.send({
+              type: `JOB_COMPLETED`,
+              payload: {
+                id: msg.payload.id,
+                result: msg.payload.args.operations,
+              },
+            })
+          }
         } catch (error) {
           log.error(`Processing failed`, msg.payload.id, ` error:`, error)
           gatsbyProcess.send({
