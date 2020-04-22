@@ -28,7 +28,7 @@ class GoogleFunctions {
     this.pubSubClient = new PubSub({ projectId: config.project_id, grpc: grpc })
     this.storageClient = new Storage({ projectId: config.project_id })
     this.subscriptionDeadline = parseInt(process.env.DEADLINE_SECONDS, 10) || 200 
-    this.maxInProgress = 50
+    this.maxInProgress = parseInt(process.env.FLOWCONTROL_INPROGRESS_MSGS, 10) || 100
     this.subscribers = []
     this.batchPublisher = this.pubSubClient.topic(this.workerTopic, {
       batching: {
