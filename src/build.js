@@ -40,7 +40,6 @@ function messageHandler(gatsbyProcess, processors = {}) {
           return
         }
         try {
-          log.info("INCOMING MESSAGE", JSON.stringify(msg.payload))
           const outputDir = msg.payload.outputDir
           let toProcess = true
           if(fs.existsSync(outputDir)){
@@ -53,7 +52,6 @@ function messageHandler(gatsbyProcess, processors = {}) {
           }
           if(toProcess){
             const result = await processor.process(msg.payload)
-            log.info("RESULT", JSON.stringify(result))
             gatsbyProcess.send({
               type: `JOB_COMPLETED`,
               payload: {
